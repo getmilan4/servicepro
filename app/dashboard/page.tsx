@@ -4,30 +4,35 @@ import oracledb from "oracledb";
 
 export default async function Dashboard() {
   const cookieStore = await cookies();
-  const session = cookieStore.get("session_id");
+  const sessionId = cookieStore.get("session_id")?.value;
 
-  if (!session) {
+  if (!sessionId) {
     redirect("/login");
   }
 
   const connection = await oracledb.getConnection({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    connectionString: process.env.DB_CONNECTION_STRING,
+    connectionString: process.env.DB_CONNECT_STRING,
+    configDir: process.cwd() + "/wallet",
   });
 
+  console.log("sessionId:", sessionId);
+
   const result = await connection.execute(
-    `SELECT ID FROM USERS
-     WHERE CURRENT_SESSION_ID = :session
+    `SELECT ID, EMAIL FROM USERS
+     WHERE CURRENT_SESSION_ID = :sessionId
      AND SESSION_EXPIRES_AT > CURRENT_TIMESTAMP`,
-    [session]
+    [sessionId]
   );
 
   await connection.close();
 
-  if (!result.rows || result.rows.length === 0) {
+  const user = result.rows?.[0];
+
+  if (!user) {
     redirect("/login");
   }
 
-  return <div>Welcome to Dashboard 🚀</div>;
+  return <div>Welcome {user[1]} 🚀</div>;
 }

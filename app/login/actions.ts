@@ -20,7 +20,8 @@ export async function login(formData: FormData): Promise<AuthResponse> {
     connection = await oracledb.getConnection({
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      connectionString: process.env.DB_CONNECTION_STRING,
+      connectionString: process.env.DB_CONNECT_STRING,
+      configDir: process.cwd() + "/wallet",
     });
 
     // 1. Get user
@@ -87,7 +88,8 @@ export async function register(formData: FormData): Promise<AuthResponse> {
     connection = await oracledb.getConnection({
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      connectionString: process.env.DB_CONNECTION_STRING,
+      connectionString: process.env.DB_CONNECT_STRING,
+      configDir: process.cwd() + "/wallet",
     });
 
     // 🔍 1. Check if user already exists
