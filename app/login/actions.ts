@@ -3,6 +3,7 @@
 import oracledb from "oracledb";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { getPool } from "@/lib/db";
 
 
 type AuthResponse = {
@@ -17,12 +18,9 @@ export async function login(formData: FormData): Promise<AuthResponse> {
   let connection;
 
   try {
-    connection = await oracledb.getConnection({
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      connectionString: process.env.DB_CONNECT_STRING,
-      configDir: process.cwd() + "/wallet",
-    });
+    const pool = await getPool();
+    connection = await pool.getConnection();
+    
 
     // 1. Get user
     const result = await connection.execute(

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import oracledb from "oracledb";
+import { getPool } from "@/lib/db";
 
 export default async function Dashboard() {
   const cookieStore = await cookies();
@@ -10,12 +10,8 @@ export default async function Dashboard() {
     redirect("/login");
   }
 
-  const connection = await oracledb.getConnection({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    connectionString: process.env.DB_CONNECT_STRING,
-    configDir: process.cwd() + "/wallet",
-  });
+  const pool = await getPool();
+  const connection = await pool.getConnection();
 
   console.log("sessionId:", sessionId);
 
@@ -34,5 +30,5 @@ export default async function Dashboard() {
     redirect("/login");
   }
 
-  return <div>Welcome {user[1]} 🚀</div>;
+  return <div>Welcome {user[1]} </div>;
 }
