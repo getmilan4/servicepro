@@ -1,15 +1,16 @@
 "use server";
 
-import oracledb from "oracledb";
 import { cookies } from "next/headers";
-import bcrypt from "bcryptjs";
 import { getPool } from "@/lib/db";
+import bcrypt from "bcrypt";
 
 
 type AuthResponse = {
   success: boolean;
   message?: string;
 };
+
+const DUMMY_HASH = "$2b$10$dummyhashfordummyusertpreventtimingenumeration";
 
 export async function login(formData: FormData): Promise<AuthResponse> {
   const email = formData.get("username") as string;
@@ -20,7 +21,7 @@ export async function login(formData: FormData): Promise<AuthResponse> {
   try {
     const pool = await getPool();
     connection = await pool.getConnection();
-    
+
 
     // 1. Get user
     const result = await connection.execute(
@@ -28,7 +29,10 @@ export async function login(formData: FormData): Promise<AuthResponse> {
       [email]
     );
 
+    
+
     if (!result.rows || result.rows.length === 0) {
+      await bcrypt.compare(password, DUMMY_HASH);
       return { success: false };
     }
 
@@ -61,6 +65,9 @@ export async function login(formData: FormData): Promise<AuthResponse> {
     cookieStore.set("session_id", sessionId, {
       httpOnly: true,
       path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
     });
 
     return { success: true };
@@ -83,12 +90,8 @@ export async function register(formData: FormData): Promise<AuthResponse> {
   let connection;
 
   try {
-    connection = await oracledb.getConnection({
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      connectionString: process.env.DB_CONNECT_STRING,
-      configDir: process.cwd() + "/wallet",
-    });
+    const pool = await getPool();
+    connection = await pool.getConnection();
 
     // 🔍 1. Check if user already exists
     const existingUser = await connection.execute(
@@ -125,6 +128,9 @@ export async function register(formData: FormData): Promise<AuthResponse> {
     cookieStore.set("session_id", sessionId, {
       httpOnly: true,
       path: "/",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
     });
 
     return { success: true };

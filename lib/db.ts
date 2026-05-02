@@ -1,21 +1,22 @@
+
 import oracledb from "oracledb";
 
-let pool: Awaited<ReturnType<typeof oracledb.createPool>>;
+type Pool = Awaited<ReturnType<typeof oracledb.createPool>>;
 
-export async function getPool() {
-  if (!pool) {
+const g = global as typeof globalThis & { __oraclePool?: Pool };
 
+export async function getPool(): Promise<Pool> {
+  if (!g.__oraclePool) {
     console.log("🔥 Creating DB pool...");
-    pool = await oracledb.createPool({
+    g.__oraclePool = await oracledb.createPool({
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       connectionString: process.env.DB_CONNECT_STRING,
       configDir: process.cwd() + "/wallet",
-
-      poolMin: 1,
+      poolMin: 2,   // pre-warm 2 connections
       poolMax: 10,
       poolIncrement: 1,
     });
   }
-  return pool;
+  return g.__oraclePool;
 }
