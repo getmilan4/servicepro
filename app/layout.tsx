@@ -1,27 +1,18 @@
-"use client";
-
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import { usePathname } from "next/navigation";
+import ClientShell from "./ClientShell";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
-  const pathname = usePathname();
-  const isLoginPage = pathname === "/login";
-
-
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="logo/logo.svg" type="image/svg+xml" />
+      </head>
       <body className="flex">
-        {/* Show sidebar only if NOT login */}
-        {!isLoginPage && <Sidebar />}
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+         <ClientShell>{children}</ClientShell>
       </body>
     </html>
   );

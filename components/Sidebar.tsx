@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import WhimstackLogo from "@/components/WhimstackLogo";
+import { logout } from "@/app/logout";
 
 import {
   LayoutDashboard,
@@ -19,17 +21,24 @@ export default function Sidebar() {
 
       {/* Top Section */}
       <div className="p-4">
-        <h1 className="text-xl font-bold mb-6">Service Pro</h1>
+
+        {/* Logo + Name */}
+        <div className="flex items-center gap-3 mb-6">
+          <WhimstackLogo size={36} />
+          <span className="text-lg font-semibold tracking-tight">
+            Whim<span style={{ color: "#3B7BF6" }}>stack</span>
+          </span>
+        </div>
 
         <nav className="space-y-2">
-          <MenuItem icon={<LayoutDashboard size={18} />} label="Dashboard" href="/dashboard" 
-          active={pathname.startsWith("/dashboard")} />
-          <MenuItem icon={<Kanban size={18} />} label="Loan Pipeline" href="/pipeline" 
-          active={pathname.startsWith("/pipeline")} />
-          <MenuItem icon={<FileText size={18} />} label="Applications" href="/applications" 
-          active={pathname.startsWith("/applications")} />
-          <MenuItem icon={<Users size={18} />} label="Borrowers" href="/borrowers" 
-          active={pathname.startsWith("/borrowers")} />
+          <MenuItem icon={<LayoutDashboard size={18} />} label="Dashboard" href="/dashboard"
+            active={pathname.startsWith("/dashboard")} />
+          <MenuItem icon={<Kanban size={18} />} label="Loan Pipeline" href="/pipeline"
+            active={pathname.startsWith("/pipeline")} />
+          <MenuItem icon={<FileText size={18} />} label="Applications" href="/applications"
+            active={pathname.startsWith("/applications")} />
+          <MenuItem icon={<Users size={18} />} label="Borrowers" href="/borrowers"
+            active={pathname.startsWith("/borrowers")} />
         </nav>
       </div>
 
@@ -37,7 +46,13 @@ export default function Sidebar() {
       <div className="p-4 border-t border-slate-700">
         <nav className="space-y-2">
           <MenuItem icon={<Settings size={18} />} label="Settings" href="/settings" />
-          <MenuItem icon={<LogOut size={18} />} label="Logout" href="/logout" />
+          {/* Logout as button*/}
+          <button onClick={() => logout()} className="w-full">
+            <div className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition hover:bg-slate-800">
+              <LogOut size={18} />
+              <span className="text-sm">Logout</span>
+            </div>
+          </button>
         </nav>
       </div>
     </div>
@@ -58,8 +73,7 @@ function MenuItem({
   return (
     <Link href={href}>
       <div className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition 
-      ${active ? "bg-blue-600" : "hover:bg-slate-800"
-        }`}>
+      ${active ? "bg-blue-600" : "hover:bg-slate-800"}`}>
         {icon}
         <span className="text-sm">{label}</span>
       </div>

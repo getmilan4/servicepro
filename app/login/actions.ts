@@ -25,11 +25,11 @@ export async function login(formData: FormData): Promise<AuthResponse> {
 
     // 1. Get user
     const result = await connection.execute(
-      `SELECT ID, PASSWORD FROM USERS WHERE EMAIL = :email`,
+      `SELECT ID, PASSWORD, STATUS FROM USERS WHERE EMAIL = :email`,
       [email]
     );
 
-    
+
 
     if (!result.rows || result.rows.length === 0) {
       await bcrypt.compare(password, DUMMY_HASH);
@@ -39,17 +39,24 @@ export async function login(formData: FormData): Promise<AuthResponse> {
     const user = result.rows[0] as any;
     const userId = user[0];
     const hashedPassword = user[1];
+    const status = user[2];
 
-    // 2. Verify password
+    // 2. Check status before password
+    if (status !== 'ACTIVE') {
+      await bcrypt.compare(password, DUMMY_HASH); // prevent timing attack
+      return { success: false };
+    }
+
+    // 3. Verify password
     const isValid = await bcrypt.compare(password, hashedPassword);
     if (!isValid) {
       return { success: false };
     }
 
-    // 3. Create new session
+    // 4. Create new session
     const sessionId = crypto.randomUUID();
 
-    // 4. Update session (this kills old one automatically)
+    // 5. Update session (this kills old one automatically)
     await connection.execute(
       `UPDATE USERS
        SET CURRENT_SESSION_ID = :sessionId,
@@ -60,7 +67,7 @@ export async function login(formData: FormData): Promise<AuthResponse> {
       { autoCommit: true }
     );
 
-    // 5. Set cookie
+    // 6. Set cookie
     const cookieStore = await cookies();
     cookieStore.set("session_id", sessionId, {
       httpOnly: true,
@@ -106,34 +113,20 @@ export async function register(formData: FormData): Promise<AuthResponse> {
     // 🔐 2. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 🆕 3. Create session ID
-    const sessionId = crypto.randomUUID();
 
-    // 💾 4. Insert new user
+    // 💾 3. Insert new user
     await connection.execute(
       `INSERT INTO USERS 
-       (EMAIL, PASSWORD, CURRENT_SESSION_ID, SESSION_EXPIRES_AT, UPDATED_AT)
+       (EMAIL, PASSWORD, UPDATED_AT, STATUS)
        VALUES 
-       (:email, :password, :sessionId, CURRENT_TIMESTAMP + INTERVAL '1' DAY, CURRENT_TIMESTAMP)`,
+       (:email, :password, CURRENT_TIMESTAMP, 'INACTIVE')`,
       {
         email,
         password: hashedPassword,
-        sessionId,
       },
       { autoCommit: true }
     );
-
-    // 🍪 5. Set session cookie (auto-login)
-    const cookieStore = await cookies();
-    cookieStore.set("session_id", sessionId, {
-      httpOnly: true,
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24,
-    });
-
-    return { success: true };
+    return { success: true, message: "Registration successful. Await admin approval." };
 
   } catch (error) {
     console.error("REGISTER ERROR:", error);
