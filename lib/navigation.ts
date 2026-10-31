@@ -37,7 +37,6 @@ export const navigation: NavigationItem[] = [
   {
     label: "Central Resource Management",
     href: "/resources",
-    icon: FolderKanban,
     roles: ["ADMIN", "EMPLOYEE", "PARTNER"],
   },
   {
