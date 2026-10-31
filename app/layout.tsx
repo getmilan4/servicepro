@@ -1,6 +1,16 @@
+
 import "./globals.css";
 import ClientShell from "./ClientShell";
 import { getCurrentUser } from "@/lib/auth";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Whimstack",
+  description: "Whimstack Application",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
 
 export default async function RootLayout({
   children,
@@ -11,9 +21,6 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="logo/logo.svg" type="image/svg+xml" />
-      </head>
       <body className="flex">
         <ClientShell role={user?.role ?? null}>
           {children}
