@@ -1,30 +1,47 @@
-// lib/auth.ts
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { getPool } from "@/lib/db";
 
-export async function requireUser() {
+export const getCurrentUser = cache(async () => {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get("session_id")?.value;
 
-  if (!sessionId) redirect("/login");
+  if (!sessionId) return null;
 
   const pool = await getPool();
   const connection = await pool.getConnection();
 
   try {
     const result = await connection.execute(
-      `SELECT ID, EMAIL FROM USERS
+      `SELECT ID, FNAME, EMAIL, ROLE
+       FROM USERS
        WHERE CURRENT_SESSION_ID = :sessionId
        AND SESSION_EXPIRES_AT > CURRENT_TIMESTAMP`,
       [sessionId]
     );
 
-    const user = result.rows?.[0] as [number, string] | undefined;
-    if (!user) redirect("/login");
+    const user = result.rows?.[0] as
+      [number, string, string, string] | undefined;
 
-    return { id: user[0], email: user[1] };
+    if (!user) return null;
+
+    return {
+      id: user[0],
+      name: user[1],
+      email: user[2],
+      role: user[3].trim().toUpperCase(),
+    };
   } finally {
     await connection.close();
   }
+});
+
+export async function requireUser() {
+  const user = await getCurrentUser();
+
+  if (!user) redirect("/login");
+
+  return user;
 }

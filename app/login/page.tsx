@@ -16,7 +16,7 @@ export default function AuthPage() {
     const res = isLogin ? await login(formData) : await register(formData);
     if (res?.success) {
       if (isLogin) {
-        router.push("/dashboard");
+        router.push(res.redirectTo || "/dashboard");
       } else {
         setMessage(res.message || "Registration successful.");
       }

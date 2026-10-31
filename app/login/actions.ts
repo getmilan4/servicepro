@@ -3,11 +3,13 @@
 import { cookies } from "next/headers";
 import { getPool } from "@/lib/db";
 import bcrypt from "bcrypt";
+import { getRoleDashboard } from "@/lib/role-routing";
 
 
 type AuthResponse = {
   success: boolean;
   message?: string;
+  redirectTo?: string;
 };
 
 const DUMMY_HASH = "$2b$10$dummyhashfordummyusertpreventtimingenumeration";
@@ -25,7 +27,7 @@ export async function login(formData: FormData): Promise<AuthResponse> {
 
     // 1. Get user
     const result = await connection.execute(
-      `SELECT ID, PASSWORD, STATUS FROM USERS WHERE EMAIL = :email`,
+      `SELECT ID, PASSWORD, STATUS, ROLE FROM USERS WHERE EMAIL = :email`,
       [email]
     );
 
@@ -40,6 +42,7 @@ export async function login(formData: FormData): Promise<AuthResponse> {
     const userId = user[0];
     const hashedPassword = user[1];
     const status = user[2];
+    const role = user[3] as string;
 
     // 2. Check status before password
     if (status !== 'ACTIVE') {
@@ -77,7 +80,12 @@ export async function login(formData: FormData): Promise<AuthResponse> {
       maxAge: 60 * 60 * 24,
     });
 
-    return { success: true };
+    const redirectTo = getRoleDashboard(role);
+
+    return { 
+      success: true,
+      redirectTo,
+    };
 
   } catch (err) {
     console.error(err);
