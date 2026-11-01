@@ -79,6 +79,7 @@ export default function CreateUserForm() {
               <option value="EMPLOYEE">Employee</option>
               <option value="PARTNER">Partner</option>
               <option value="POS">POS</option>
+              <option value="WHIMREWARD">WhimReward</option>
             </select>
           </div>
 

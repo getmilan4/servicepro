@@ -11,6 +11,3 @@ export async function getConnection() {
   });
 }
 
-console.log("USER:", process.env.DB_USER);
-console.log("PASS:", process.env.DB_PASSWORD);
-
